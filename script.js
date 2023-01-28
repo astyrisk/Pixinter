@@ -1,3 +1,6 @@
+/* Eloquent JavaScript: Chapter 19 Exerices & Solutions */
+
+
 /* Picture */
 class Picture {
   constructor(width, height, pixels) {
@@ -36,8 +39,6 @@ function elt(type, props, ...children) {
 }
 
 const scale = 10;
-
-  
 /* Canvas */
 class PictureCanvas {
   constructor(picture, pointerDown) {
@@ -211,12 +212,13 @@ function fill({x, y}, state, dispatch) {
   }
   dispatch({picture: state.picture.draw(drawn)});
 }
+
 function pick(pos, state, dispatch) {
   dispatch({color: state.picture.pixel(pos.x, pos.y)});
 }
 
 /* saving and loading */
-class saveButton {
+class SaveButton {
   constructor(state) {
     this.picture = state.picture;
     this.dom = elt("button", {
@@ -227,32 +229,128 @@ class saveButton {
     let canvas = elt("canvas");
     drawPicture(this.picture, canvas, 1);
     let link = elt("a", {
-      href: canvas.toDataUrl(),
+      href: canvas.toDataURL(),
       download: "pixelart.png"
     });
     document.body.appendChild(link);
     link.click();
     link.remove();
   }
-  syncState(state) {this.picture = state.picture; }
+  syncState(state) { this.picture = state.picture; }
 }
 
-class loadButton { 
+class LoadButton {
+  constructor(_, {dispatch}) {
+    this.dom = elt("button", {
+      onclick: () => startLoad(dispatch)
+    }, "Load");
+  }
+  syncState() {}
 }
 
-/* testing */
-let state = {
+function startLoad(dispatch) {
+  let input = elt("input", {
+    type: "file",
+    onchange: () => finishLoad(input.files[0], dispatch)
+  });
+  document.body.appendChild(input);
+  input.click();
+  input.remove();
+}
+
+function finishLoad(file, dispatch) {
+  if (file == null) return;
+  let reader = new FileReader();
+  reader.addEventListener("load", () => {
+    let image = elt("img", {
+      onload: () => dispatch({
+        picture: pictureFromImage(image)
+      }),
+      src: reader.result
+    });
+  });
+  reader.readAsDataURL(file);
+}
+
+function pictureFromImage(image) {
+  let width = Math.min(100, image.width);
+  let height = Math.min(100, image.height);
+  let canvas = elt("canvas", {width, height});
+  let cx = canvas.getContext("2d");
+  cx.drawImage(image, 0, 0);
+  let pixels = [];
+  let {data} = cx.getImageData(0, 0, width, height);
+
+  function hex(n) {
+    return n.toString(16).padStart(2, "0");
+  }
+  for (let i = 0; i < data.length; i += 4) {
+    let [r, g, b] = data.slice(i, i + 3);
+    pixels.push("#" + hex(r) + hex(g) + hex(b));
+  }
+  return new Picture(width, height, pixels);
+}
+
+
+/* undo */
+function historyUpdateState(state, action) {
+  if (action.undo == true) {
+    if (state.done.length == 0) return state;
+    return Object.assign({}, state, {
+      picture: state.done[0],
+      done: state.done.slice(1),
+      doneAt: 0
+    });
+  } else if (action.picture &&
+             state.doneAt < Date.now() - 1000) {
+    return Object.assign({}, state, action, {
+      done: [state.picture, ...state.done],
+      doneAt: Date.now()
+    });
+  } else {
+    return Object.assign({}, state, action);
+  }
+}
+
+class UndoButton {
+  constructor(state, {dispatch}) {
+    this.dom = elt("button", {
+      onclick: () => dispatch({undo: true}),
+      disabled: state.done.length == 0
+    }, "Undo");
+  }
+  syncState(state) {
+    this.dom.disabled = state.done.length == 0;
+  }
+}
+
+/* The Application */
+const startState = {
   tool: "draw",
   color: "#000000",
-  picture: Picture.empty(60, 30, "#f0f0f0")
+  picture: Picture.empty(60, 30, "#f0f0f0"),
+  done: [],
+  doneAt: 0
 };
 
-let app = new PixelEditor(state, {
-  tools: {draw, fill, rectangle, pick},
-  controls: [ToolSelect, ColorSelect],
-  dispatch(action) {
-    state = updateState(state, action);
-    app.syncState(state);
-  }
-});
-document.querySelector("div").appendChild(app.dom);
+const baseTools = {draw, fill, rectangle, pick};
+
+const baseControls = [
+  ToolSelect, ColorSelect, SaveButton, LoadButton, UndoButton
+];
+
+function startPixelEditor({state = startState,
+                           tools = baseTools,
+                           controls = baseControls}) {
+  let app = new PixelEditor(state, {
+    tools,
+    controls,
+    dispatch(action) {
+      state = historyUpdateState(state, action);
+      app.syncState(state);
+    }
+  });
+  return app.dom;
+}
+
+document.querySelector("div").appendChild(startPixelEditor({}));
