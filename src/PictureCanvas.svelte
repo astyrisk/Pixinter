@@ -12,6 +12,12 @@
         y: number;
     }
 
+    interface ColoredPoint {
+        x: number;
+        y: number;
+        color: string;
+    }
+
     interface Config {
         color: string,
         tool: string,
@@ -21,6 +27,12 @@
         canvas = document.querySelector('canvas') as HTMLCanvasElement;
         ctx = canvas.getContext('2d') as CanvasRenderingContext2D;
     });
+
+    class Picture { 
+        width: number;
+        heigh: number;
+        pixels: Point[];
+    }
 
     function getPointerPosition(p: MouseEvent, domNode: HTMLElement): Point {
         let rect = domNode.getBoundingClientRect();

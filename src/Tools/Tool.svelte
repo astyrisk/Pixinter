@@ -1,61 +1,81 @@
-<script>
+<script lang="ts">
     import { onMount } from "svelte";
     import { config } from "../stores";
-    //TODO fill
-    //TODO rectangel
-    //TODO keydowns 
-    let pen;
-    let eraser;
+
+    
+
+    /* subroutines */
+    function getClassName(target: EventTarget | any) : string {
+        return  (target.classList[0]);
+    }
+
+    /* const */
+    const tools: string[] = ["pen", "eraser", "fill", "picker"];
+    const shapes: string[] = ["circle", "rect"];
+
+    let toolsImg: HTMLImageElement[];
+
 
     onMount(() => {
-        pen= document.querySelector(".pen");
-        eraser = document.querySelector(".eraser");
+        toolsImg = Array.from(document.querySelectorAll("img"));
     });
 
 
+    function handleMouseClick(event: MouseEvent) {
+        let toolName: string = getClassName(event.target);
+        toolsImg.map(n => { n.src = `../../icons/${n.classList[0]}.png`; });
+        toolsImg.filter(n => n.classList[0] == toolName)[0].src = `../../icons/${toolName}-selected.png`;
+    }
     function handleKeyDown() {
     }
+    function handleMouseOver(event: MouseEvent | FocusEvent) {
+        let toolName: string = getClassName(event.target);
+        toolsImg.map(n => { n.style.borderWidth = "0px"; });
+        toolsImg.filter(n => n.classList[0] == toolName)[0].style.borderWidth = "1px";
+    }
+    function handleFocus() {
+    }
 
-    function handlePenClick() {
-        config.update(n => n = {color: n.color, tool: "pen"})
-        eraser.style.borderWidth = "0px";
-        pen.style.borderWidth = "0.5px";
-    }
-    function handleEraserClick() {
-        config.update(n => n = {color: n.color, tool: "eraser"})
-        pen.style.borderWidth = "0px";
-        eraser.style.borderWidth = "0.5px";
-    }
+
 
 </script>
 
 
-<div class="tools">
-    <div class="pen" on:click={handlePenClick} on:keydown={handleKeyDown}>
-        <img src="../../icons/pen-tool.png" alt="pixel" width="30px" height="30px">
+<!-- Pro Tip: Rewrite that shit using a loop, also you don't need the tons of functions, variables above -->
+<main>
+    <!-- Tools-->
+    <div class="tools">
+        {#each tools as tool}
+            <img src="../../icons/{tool}.png" class="{tool}" alt="{tool}" width="30px" on:click={handleMouseClick} on:keydown={handleKeyDown} on:mouseover={handleMouseOver} on:focus={handleFocus}>
+        {/each}
     </div>
 
-    <div class="eraser" on:click={handleEraserClick} on:keydown={handleKeyDown}>
-        <img src="../../icons/eraser.png" alt="pixel" width="30px" height="30px">
+    <img class="seperator" src="../../icons/seperator.png" alt="seperator" width="30px" height="30px">
+
+    <!-- Shapes -->
+    <div class="shapes">
+        {#each shapes as shape}
+            <img src="../../icons/{shape}.png" class="{shape}" alt="{shape}" width="30px" on:click={handleMouseClick} on:keydown={handleKeyDown} on:mouseover={handleMouseOver} on:focus={handleFocus}>
+        {/each}
     </div>
-</div>
+    
+    <img class="seperator" src="../../icons/seperator.png" alt="seperator" width="30px" height="30px">
+</main>
+
 
 <style>
-    .tools {
+    main {
         display: flex;
         align-items: center;
         justify-content: center;
     }
-    .pen, .eraser {
-        filter: grayscale(0%);
-        color: white;
-        border: solid;
+    img {
         border-width: 0px;
+        border: solid;
         border-radius: 10%;
         border-color: white;
+        border-width: 0px;
+        margin-right: 7px;
+        margin-left: 7px;
     }
-    .pen {
-        margin-right: 10px;
-    }
-
 </style>
