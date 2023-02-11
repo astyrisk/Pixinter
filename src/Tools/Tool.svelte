@@ -1,6 +1,6 @@
 <script lang="ts">
     import { onMount } from "svelte";
-    import { config } from "../stores";
+    import { config, TOOLENUM } from "../stores";
 
     
 
@@ -25,6 +25,16 @@
         let toolName: string = getClassName(event.target);
         toolsImg.map(n => { n.src = `../../icons/${n.classList[0]}.png`; });
         toolsImg.filter(n => n.classList[0] == toolName)[0].src = `../../icons/${toolName}-selected.png`;
+        /* updating the store */
+        toolName = toolName.toUpperCase();
+
+        config.update(n => n = {
+            color: n.color,
+            background_color: n.background_color,
+            tool: TOOLENUM[toolName],
+        });
+
+
     }
     function handleKeyDown() {
     }
@@ -41,7 +51,6 @@
 </script>
 
 
-<!-- Pro Tip: Rewrite that shit using a loop, also you don't need the tons of functions, variables above -->
 <main>
     <!-- Tools-->
     <div class="tools">

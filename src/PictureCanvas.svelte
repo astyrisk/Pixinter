@@ -2,73 +2,203 @@
 
     import { onMount } from 'svelte';
 	import { config } from "./stores";
+    import type { Config } from "./stores"
 
-    const scale: number = 10;
-    let canvas: HTMLCanvasElement;
-    let ctx: CanvasRenderingContext2D;
-
+    /* types & interfaces */
     interface Point {
         x: number;
         y: number;
     }
-
-    interface ColoredPoint {
-        x: number;
-        y: number;
-        color: string;
+    interface shape {
+        start: Point;
+        end: Point; 
     }
 
-    interface Config {
-        color: string,
-        tool: string,
+    class Picture {
+        width: number;
+        height: number;
+        pixels: string[][];
+
+        constructor (width: number, height: number) {
+            this.width = width;
+            this.height = height;
+
+            this.pixels = new Array(height);
+            for (let i = 0; i < height ; i++) {
+                this.pixels[i] = new Array(width);
+                this.pixels[i].fill(backgroundColor);
+            }
+        }
+
+        redraw() {
+            // implement redraw()
+        }
+        drawPoint(p: Point, color: string, ctx: CanvasRenderingContext2D) {
+            this.pixels[p.y][p.x] = color;
+            ctx.fillStyle = color; 
+            ctx.fillRect(p.x * 10, p.y * 10, scale, scale);
+        }
+        getColor(p: Point) : string {
+            return this.pixels[p.y][p.x];
+        }
+        drawPoints(ps: Point[], color: string, ctx: CanvasRenderingContext2D) {
+            ctx.fillStyle = color;
+            for (let {x, y} of ps) {
+                this.pixels[y][x] = color;
+                ctx.fillRect(x  * scale, y * scale, scale, scale);
+            }
+        }
     }
+
+    /* constants & HTMLElements */
+    const scale: number = 10;
+    const width: number = 900;
+    const height: number = 600;
+    const backgroundColor: string = "#E1E4EA";
+
+    const around = [{dx: -1, dy: 0}, {dx: 1, dy: 0},
+                    {dx: 0, dy: -1}, {dx: 0, dy: 1}];
+
+    let canvas: HTMLCanvasElement;
+    let ctx: CanvasRenderingContext2D;
+    let picture: Picture;
+    let start: Point;
+
+    let drawingRect: boolean = false;
+    let drawingCircle: boolean = false;
 
     onMount(() => {
         canvas = document.querySelector('canvas') as HTMLCanvasElement;
         ctx = canvas.getContext('2d') as CanvasRenderingContext2D;
+        picture = new Picture(width / scale, height / scale);
+
     });
 
-    class Picture { 
-        width: number;
-        heigh: number;
-        pixels: Point[];
-    }
-
+    /* subroutines */
     function getPointerPosition(p: MouseEvent, domNode: HTMLElement): Point {
         let rect = domNode.getBoundingClientRect();
-        return {x: Math.floor((p.clientX - rect.left) / scale) * scale,
-                y: Math.floor((p.clientY - rect.top)  / scale) * scale};
+        return {x: Math.floor((p.clientX - rect.left) / scale),
+                y: Math.floor((p.clientY - rect.top)  / scale)};
     }
 
+    let getRadius = (i: Point, j: Point): number  => Math.sqrt(Math.pow(i.x - j.x, 2) + Math.pow(i.y - j.y, 2));
+
+    /*TODO: rewrite the following in a consistent way */
     function drawPoint(p: Point, config: Config) {
-        if (config.tool == "pen") {
-            ctx.fillStyle = config['color'];
-            ctx.fillRect(p.x, p.y, scale, scale);
-        } else {
-            ctx.fillStyle = "#ffffff";
-            ctx.fillRect(p.x, p.y, scale, scale);
+        switch(config.tool) {
+            case 'PEN':
+                picture.drawPoint(p, config['color'], ctx);
+                break;
+            case 'ERASER':
+                picture.drawPoint(p, config['background_color'], ctx);
+                break;
         }
     }
 
-    function handleMouseclick(event: MouseEvent, config: Config) {
-        if (event.button != 0) return;
-        drawPoint(getPointerPosition(event, canvas), config);
+    function pickColor(p: Point) {
+        let selectedColor: string = picture.getColor(p);
+        config.update(n => n = {
+            color: selectedColor,
+            background_color: n.background_color,
+            tool: n.tool,
+        });
     }
 
-    function handleMousemove(event: MouseEvent, config: Config) {
-        if (event.buttons == 0) return;
-        drawPoint(getPointerPosition(event, canvas), config);
+    function drawRect(start: Point, end: Point, color: string, ctx: CanvasRenderingContext2D) {
+        let xStart = Math.min(start.x, end.x);
+        let yStart = Math.min(start.y, end.y);
+        let xEnd   = Math.max(start.x, end.x);
+        let yEnd   = Math.max(start.y, end.y);
+        let drawn  = [];
+
+        for (let y = yStart; y < yEnd; y++) 
+            for (let x = xStart; x < xEnd; x++) 
+                drawn.push({x,y});
+
+        picture.drawPoints(drawn, color, ctx);
     }
+    
+
+    function drawCircle(start: Point, end: Point, color: string, ctx: CanvasRenderingContext2D) {
+        let r: number = Math.ceil(getRadius(start, end));
+        let drawn  = [];
+
+        let xStart = Math.min(start.x, end.x);
+        let yStart = Math.min(start.y, end.y);
+        let xEnd   = Math.max(start.x, end.x);
+        let yEnd   = Math.max(start.y, end.y);
+
+        xStart = xStart - 2 * r;
+        yStart = yStart - 2 * r;
+        xEnd = xEnd + 2 * r;
+        yEnd = yEnd + 2 * r;
+
+        for (let y = yStart; y < yEnd; y++) 
+            for (let x = xStart; x < xEnd; x++)  {
+                if (getRadius(start, {x, y}) <= r) 
+                    drawn.push({x, y});
+            }
+
+        console.log(drawn);
+        picture.drawPoints(drawn, color, ctx);
+    }
+
+    function fillColor(p: Point, color: string, ctx: CanvasRenderingContext2D) {
+        let w = width / 10, h = height / 10;
+        let targetColor: string = picture.getColor(p);
+        let drawn: Point[] = [p];
+ 
+        for (let done = 0; done < drawn.length; done++){
+            for (let {dx, dy} of around) {
+                let x = drawn[done].x + dx, y =  drawn[done].y + dy;
+                if (x >= 0 && x < w &&
+                    y >= 0 && y < h &&
+                    picture.getColor({x, y}) == targetColor &&
+                    !drawn.some(p => p.x == x && p.y == y)) {
+                    drawn.push({x, y});
+                }
+            }
+        }
+        picture.drawPoints(drawn, color, ctx);
+    }
+
+    function handleClick(event: MouseEvent, config: Config) {
+        if (event.button != 0) return;
+
+        switch(config.tool) {
+            case 'PICKER':
+                pickColor(getPointerPosition(event, canvas));
+                break;
+            case 'FILL':
+                fillColor(getPointerPosition(event, canvas), config['color'], ctx);
+                break;
+            case 'RECT':
+                if (drawingRect) drawRect(start, getPointerPosition(event, canvas), config['color'], ctx);
+                else start = getPointerPosition(event, canvas);
+                drawingRect = !drawingRect;
+                break;
+            case 'CIRCLRE':
+                if (drawingCircle) drawCircle(start, getPointerPosition(event, canvas), config['color'], ctx);
+                else start = getPointerPosition(event, canvas);
+                drawingCircle = !drawingCircle;
+                break;
+            default:
+                drawPoint(getPointerPosition(event, canvas), config);
+        }
+    }
+
+    function handleMove(event: MouseEvent, config: Config) {
+        if (event.buttons == 0) return;
+        switch(config.tool) {
+            default:
+                drawPoint(getPointerPosition(event, canvas), config);
+        } 
+    }
+
+
+    /*********************************************************/
+
 </script>
 
-<div>
-    <canvas id="canvas" width="900" height="600" style="border:1px solid #000;" on:click={(e) => handleMouseclick(e, $config)} on:mousemove={(e) => handleMousemove(e, $config)}  >  
-    </canvas>
-</div>
-
-
-<style>
-    #canvas{
-        background-color: #E1E4EA;
-    }
-</style>
+<canvas id="canvas" width={width} height={height} style="border:1px solid #000; background-color: {backgroundColor}" on:click={(e) => handleClick(e, $config)} on:mousemove={(e) => handleMove(e, $config)}  >  
+</canvas>

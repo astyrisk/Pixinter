@@ -1,11 +1,14 @@
-<script>
-    //TODO put an icon before the input
-
-    import { config } from "../stores";
+<script lang="ts">
+  import { config } from "../stores";
 
   function handleColorChange(event) {
-    config.set({color: event.target.value, tool: "pen"});
+    config.update(n => n =  {
+      color: event.target.value,
+      background_color: n.background_color,
+      tool: n.tool,
+    });
   }
+
 </script>
 
 <style>

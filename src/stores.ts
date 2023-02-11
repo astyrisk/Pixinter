@@ -1,14 +1,5 @@
 import { writable } from "svelte/store"
 
-// add Enum for tool
-// write a proper config
-
-//interface Config {
-//    color: string,
-//    background-color: string,
-//    tool: string,
-//}
-
 /* enum for tool */
 const TOOLENUM = {
     PEN: 'PEN',
@@ -22,6 +13,7 @@ const TOOLENUM = {
 type ObjectValues<T> = T[keyof T];
 type ToolEnum = ObjectValues<typeof TOOLENUM>
 
+/* config type */
 interface Config {
     color: string,
     background_color: string,
@@ -30,5 +22,6 @@ interface Config {
 
 
 const config = writable<Config>({color: "#000000", background_color: "#E1E3EA", tool: 'PEN'})
-export {config};
+export { config, TOOLENUM };
+export type { Config, ToolEnum };
 //export const config = writable<Config>({color: "#000000", tool: "pen"});
