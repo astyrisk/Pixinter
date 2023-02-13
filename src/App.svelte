@@ -1,7 +1,8 @@
 <script lang="ts">
-	import PictureCanvas from "./PictureCanvas.svelte";
-	import Color from './Tools/Settings.svelte'
-	import Tool from "./Tools/Tool.svelte";
+	import PictureCanvas from "./Compononets/PictureCanvas.svelte";
+	import Color from './Compononets/Settings.svelte'
+	import Tool from "./Compononets/Tool.svelte";
+	import File from "./Compononets/File.svelte"
 
 </script>
 
@@ -14,6 +15,9 @@
 		<div class="tool"> <Tool/> </div>
 		<Color />
 	</div>
+	<div class="file">
+		<File />
+	</div>
 </main>
 
 <style>
@@ -22,7 +26,7 @@
 	h1{
 		color: white;
 	}
-	h1, .canvas, .tools {
+	h1, .canvas, .tools, .file {
 		display: flex;
 		justify-content: center;
 		align-items: center;

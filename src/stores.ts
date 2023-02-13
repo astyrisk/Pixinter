@@ -1,5 +1,7 @@
 import { writable } from "svelte/store"
+import { Picture } from "./types";
 
+/*move to types.ts */
 /* enum for tool */
 const TOOLENUM = {
     PEN: 'PEN',
@@ -21,7 +23,9 @@ interface Config {
 }
 
 
-const config = writable<Config>({color: "#000000", background_color: "#E1E3EA", tool: 'PEN'})
-export { config, TOOLENUM };
+const config = writable<Config>({color: "#000000", background_color: "#E1E3EA", tool: 'PEN'});
+const picture =  writable<Picture>(new Picture(90, 60, 10));
+
+export { picture, config, TOOLENUM };
 export type { Config, ToolEnum };
 //export const config = writable<Config>({color: "#000000", tool: "pen"});
