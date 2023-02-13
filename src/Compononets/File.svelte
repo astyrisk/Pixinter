@@ -25,7 +25,7 @@
             picture.subscribe(n=> {
                 n.setPixels(pixels)
                 n.redraw(ctx);
-            })
+            });
         });
     }
 
@@ -52,6 +52,7 @@
         reader.readAsDataURL(file);
     }
 
+    //Rewrite that shit
     function pictureFromImage(image) {
         let width = Math.min(900, image.width);
         let height = Math.min(600, image.height);

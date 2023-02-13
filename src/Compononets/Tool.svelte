@@ -17,7 +17,7 @@
 
 
     onMount(() => {
-        toolsImg = Array.from(document.querySelectorAll("img"));
+        toolsImg = Array.from(document.querySelectorAll(".img"));
     });
 
 
@@ -55,7 +55,7 @@
     <!-- Tools-->
     <div class="tools">
         {#each tools as tool}
-            <img src="../../icons/{tool}.png" class="{tool}" alt="{tool}" width="30px" on:click={handleMouseClick} on:keydown={handleKeyDown} on:mouseover={handleMouseOver} on:focus={handleFocus}>
+            <img src="../../icons/{tool}.png" class="{tool} img" alt="{tool}" width="30px" on:click={handleMouseClick} on:keydown={handleKeyDown} on:mouseover={handleMouseOver} on:focus={handleFocus}>
         {/each}
     </div>
 
@@ -64,7 +64,7 @@
     <!-- Shapes -->
     <div class="shapes">
         {#each shapes as shape}
-            <img src="../../icons/{shape}.png" class="{shape}" alt="{shape}" width="30px" on:click={handleMouseClick} on:keydown={handleKeyDown} on:mouseover={handleMouseOver} on:focus={handleFocus}>
+            <img src="../../icons/{shape}.png" class="{shape} img" alt="{shape}" width="30px" on:click={handleMouseClick} on:keydown={handleKeyDown} on:mouseover={handleMouseOver} on:focus={handleFocus}>
         {/each}
     </div>
     

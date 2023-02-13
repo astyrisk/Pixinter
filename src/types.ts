@@ -1,3 +1,5 @@
+import { pictureHistory } from "./stores";
+
 interface Point {
     x: number;
     y: number;
@@ -25,7 +27,17 @@ class Picture {
         this.pixels = pixels;
     }
 
+    getPixels() {
+        let newPixels = new Array(60);
+        for (let i = 0; i < 60; i++) {
+            newPixels[i] = new Array(90);
+            newPixels[i] = this.pixels[i].slice();
+        }
+        return newPixels;
+    }
+
     redraw(ctx: CanvasRenderingContext2D) {
+        console.log('peeeeeeeeeeep');
         for (let j = 0; j < this.height; j++)
             for (let i = 0; i < this.width; i++) {
                 ctx.fillStyle = this.pixels[j][i];
@@ -33,6 +45,7 @@ class Picture {
             }
     }
     drawPoint(p: Point, color: string, ctx: CanvasRenderingContext2D) {
+
         this.pixels[p.y][p.x] = color;
         ctx.fillStyle = color; 
         ctx.fillRect(p.x * 10, p.y * 10, this.scale, this.scale);

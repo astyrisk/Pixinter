@@ -22,10 +22,13 @@ interface Config {
     tool: ToolEnum,
 }
 
+let pictures: Picture[] = []; 
+
 
 const config = writable<Config>({color: "#000000", background_color: "#E1E3EA", tool: 'PEN'});
 const picture =  writable<Picture>(new Picture(90, 60, 10));
+const pictureHistory = writable<Picture[]>(pictures);
 
-export { picture, config, TOOLENUM };
+export { picture, config, pictureHistory, TOOLENUM };
 export type { Config, ToolEnum };
 //export const config = writable<Config>({color: "#000000", tool: "pen"});

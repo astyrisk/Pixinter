@@ -2,9 +2,9 @@
     //TODO rewrite the shapes (rectangle and circle);
     //TODO implement UNDO and REDO
     import { onMount } from 'svelte';
-	import { config, picture } from "../stores";
+	import { config, picture, pictureHistory } from "../stores";
     import { getPointerPosition, getRadius, getColor } from "../subroutines";
-    import type { Picture } from "../types";
+    import { Picture } from "../types";
     import type { Point } from "../types";
     import type { Config } from "../stores"
 
@@ -129,6 +129,13 @@
     function handleClick(event: MouseEvent, config: Config) {
         if (event.button != 0) return;
 
+        let newPic = new Picture(90, 60, 10);
+        let newPixels = ($picture).getPixels();
+
+        newPic.setPixels(newPixels);
+
+        $pictureHistory.push(newPic);
+
         switch(config.tool) {
             case 'PICKER':
                 pickColor(getPointerPosition(event, canvas));
@@ -149,10 +156,19 @@
             default:
                 drawPoint(getPointerPosition(event, canvas), config);
         }
-    }
+   }
 
     function handleMove(event: MouseEvent, config: Config) {
         if (event.buttons == 0) return;
+
+        /* The following shit is broken, fix it */
+        let newPic = new Picture(90, 60, 10);
+        let newPixels = ($picture).getPixels();
+
+        newPic.setPixels(newPixels);
+
+        $pictureHistory.push(newPic);
+
         switch(config.tool) {
             default:
                 drawPoint(getPointerPosition(event, canvas), config);
@@ -163,5 +179,4 @@
     /*********************************************************/
 </script>
 
-<canvas id="canvas" width={width} height={height} style="border:1px solid #000; background-color: {backgroundColor}" on:click={(e) => handleClick(e, $config)} on:mousemove={(e) => handleMove(e, $config)}  >  
-</canvas>
+<canvas id="canvas" width={width} height={height} style="border:1px solid #000; background-color: {backgroundColor}" on:click={(e) => handleClick(e, $config)} on:mousemove={(e) => handleMove(e, $config)}  >  </canvas>
