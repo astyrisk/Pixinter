@@ -2,7 +2,8 @@
 Pixinter offers basic tools for pixel painting.
 
 ## Try it!
-To run the application qui ckly, visit [Pixinter](https://pixinter.vercel.app/)  or
+visit [Pixinter](https://pixinter.vercel.app/), To run the application quickly or
+
 ## Run it on locally
 
 - Clone the application ... 
