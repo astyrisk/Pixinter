@@ -1,20 +1,23 @@
+## Description
+Pixinter offers basic tools for pixel painting.
 
-## Get started
+## Try it!
+To run the application qui ckly, visit [Pixinter](https://pixinter.vercel.app/)  or
+## Run it on locally
 
-Install the dependencies...
+- Clone the application ... 
+```bash
+git clone https://github.com/Marguesto/Pixinter.git
+```
+- Install the dependencies...
 
 ```bash
 cd Pixinter
 npm install
 ```
-
-...then start [Rollup](https://rollupjs.org):
+- ...then start [Rollup](https://rollupjs.org):
 
 ```bash
-npm run dev
+npm run start
 ```
-
-Navigate to [localhost:8080](http://localhost:8080). You should see your app running. Edit a component file in `src`, save it, and reload the page to see your changes.
-
-By default, the server will only respond to requests from localhost. To allow connections from other computers, edit the `sirv` commands in package.json to include the option `--host 0.0.0.0`.
-
+Navigate to [localhost:8080](http://localhost:8080). You should see Pixinter running. 
