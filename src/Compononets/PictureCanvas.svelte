@@ -1,12 +1,15 @@
 <script lang="ts">
     //TODO rewrite the shapes (rectangle and circle);
-    //TODO implement UNDO and REDO
+    //TODO rewrite constants into one big object wrapped in a store, make it readable
+    //TODO merge canvas and canvasHistory into one store
+    //TODO in mousemove, and mouseclick, change only whenver there is a change in mouse position; track mouse position in a point variable
+
     import { onMount } from 'svelte';
 	import { config, picture, pictureHistory } from "../stores";
-    import { getPointerPosition, getRadius, getColor } from "../subroutines";
+    import { getPointerPosition, getRadius } from "../subroutines";
     import { Picture } from "../types";
     import type { Point } from "../types";
-    import type { Config } from "../stores"
+    import type { Config } from "../types"
 
 
     /* constants & HTMLElements */
@@ -20,8 +23,6 @@
 
     let canvas: HTMLCanvasElement;
     let ctx: CanvasRenderingContext2D;
-    // let picture: Picture;
-    let pictureObj: Picture;
     let start: Point;
 
     let drawingRect: boolean = false;
@@ -30,31 +31,22 @@
     onMount(() => {
         canvas = document.querySelector('canvas') as HTMLCanvasElement;
         ctx = canvas.getContext('2d') as CanvasRenderingContext2D;
-        // picture = new Picture(width / scale, height / scale, scale);
     });
 
-
-    /***** */
-
-    /*******/
-    /*TODO: rewrite the following in a consistent way */
-    /** drawing */
     function drawPoint(p: Point, config: Config) {
         switch(config.tool) {
             case 'PEN':
-                picture.subscribe(n => n.drawPoint(p, config['color'], ctx));
-                // picture.drawPoint(p, config['color'], ctx);
+                $picture.drawPoint(p, config['color'], ctx);
                 break;
             case 'ERASER':
-                picture.subscribe(n => n.drawPoint(p, config['background_color'], ctx));
-                // picture.drawPoint(p, config['background_color'], ctx);
+                $picture.drawPoint(p, config['background_color'], ctx);
                 break;
         }
     }
 
     function pickColor(p: Point) {
-        let selectedColor: string;
-        picture.subscribe(n=> selectedColor = n.getColor(p));
+        let selectedColor: string = $picture.getColor(p); 
+
         config.update(n => n = {
             color: selectedColor,
             background_color: n.background_color,
@@ -73,8 +65,7 @@
             for (let x = xStart; x < xEnd; x++) 
                 drawn.push({x,y});
 
-    //    picture.drawPoints(drawn, color, ctx);
-       picture.subscribe(n => n.drawPoints(drawn, color, ctx));
+       $picture.drawPoints(drawn, color, ctx);
     }
     
 
@@ -82,47 +73,36 @@
         let r: number = Math.ceil(getRadius(start, end));
         let drawn  = [];
 
-        let xStart = Math.min(start.x, end.x);
-        let yStart = Math.min(start.y, end.y);
-        let xEnd   = Math.max(start.x, end.x);
-        let yEnd   = Math.max(start.y, end.y);
-
-        xStart = xStart - 2 * r;
-        yStart = yStart - 2 * r;
-        xEnd = xEnd + 2 * r;
-        yEnd = yEnd + 2 * r;
+        let xStart = Math.min(start.x, end.x) - 2 * r;
+        let yStart = Math.min(start.y, end.y) - 2 * r;
+        let xEnd   = Math.max(start.x, end.x) + 2 * r;
+        let yEnd   = Math.max(start.y, end.y) + 2 * r;
 
         for (let y = yStart; y < yEnd; y++) 
-            for (let x = xStart; x < xEnd; x++)  {
+            for (let x = xStart; x < xEnd; x++)  
                 if (getRadius(start, {x, y}) <= r) 
                     drawn.push({x, y});
-            }
 
-        console.log(drawn);
-        picture.subscribe(n => n.drawPoints(drawn, color, ctx));
-        // picture.drawPoints(drawn, color, ctx);
+        $picture.drawPoints(drawn, color, ctx);
     }
 
-    function fillColor(p: Point, color: string, ctx: CanvasRenderingContext2D) {
+    function fillColor(point: Point, color: string, ctx: CanvasRenderingContext2D) {
         let w = width / 10, h = height / 10;
-        let targetColor: string;
-        picture.subscribe(n => targetColor = n.getColor(p));
-        // picture.getColor(p);
-        let drawn: Point[] = [p];
+        let targetColor: string = $picture.getColor(point);
+        let drawn: Point[] = [point];
  
         for (let done = 0; done < drawn.length; done++){
             for (let {dx, dy} of around) {
                 let x = drawn[done].x + dx, y =  drawn[done].y + dy;
                 if (x >= 0 && x < w &&
                     y >= 0 && y < h &&
-                    getColor(picture, {x,y}) == targetColor &&
+                    $picture.getColor({x,y}) == targetColor &&
                     !drawn.some(p => p.x == x && p.y == y)) {
                     drawn.push({x, y});
                 }
             }
         }
-        // picture.drawPoints(drawn, color, ctx);
-        picture.subscribe(n => n.drawPoints(drawn, color, ctx));
+        $picture.drawPoints(drawn, color, ctx);
     }
 
     /* handling canvas */
@@ -130,10 +110,7 @@
         if (event.button != 0) return;
 
         let newPic = new Picture(90, 60, 10);
-        let newPixels = ($picture).getPixels();
-
-        newPic.setPixels(newPixels);
-
+        newPic.setPixels(($picture).getPixels());
         $pictureHistory.push(newPic);
 
         switch(config.tool) {
@@ -161,12 +138,8 @@
     function handleMove(event: MouseEvent, config: Config) {
         if (event.buttons == 0) return;
 
-        /* The following shit is broken, fix it */
         let newPic = new Picture(90, 60, 10);
-        let newPixels = ($picture).getPixels();
-
-        newPic.setPixels(newPixels);
-
+        newPic.setPixels(($picture).getPixels());
         $pictureHistory.push(newPic);
 
         switch(config.tool) {
