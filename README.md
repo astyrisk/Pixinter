@@ -10,7 +10,7 @@ visit [Pixinter](https://pixinter.vercel.app/), To run the application quickly o
 ```bash
 git clone https://github.com/Marguesto/Pixinter.git
 ```
-- Install the dependencies...
+- ...Install the dependencies...
 
 ```bash
 cd Pixinter
